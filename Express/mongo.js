@@ -1,7 +1,8 @@
+require("dotenv").config()
 const mongoose = require('mongoose')
 
 // Replace with the URL of your own database. Do not store the password on GitLab!
-const url = "mongodb+srv://fullstack:mehdizaidane1@reactmongo.hpdvp.mongodb.net/fullstack-reminders?retryWrites=true&w=majority"
+const url = process.env.DATABASE_URL
 
 mongoose.connect(url)
 
@@ -25,18 +26,30 @@ const note = new Note({
   important: true
 })
 
-/* note
+ note
   .save()
   .then(response => {
-    console.log('note saved!')
+    // console.log('note saved!')
     mongoose.connection.close()
-  }) */
+  }) 
 
   Note
   .find({})
   .then(result => {
     result.forEach(note => {
-      console.log(note)
+      // console.log(note)
     })
     mongoose.connection.close()
   })
+
+
+const test = process.argv
+const reminderName = test[2]
+const timestamp = test[3]
+
+const note2 = new Note({
+  content: reminderName,
+  date: timestamp,
+  important: true
+})
+console.log(`adding person Reminder ${reminderName} at ${timestamp} to the reminder database`)
