@@ -33,7 +33,7 @@ class Reminder extends React.Component {
 
 
     axios
-    .post('http://localhost:3001/api/reminders', nameObject)
+    .post('https://obscure-citadel-05812.herokuapp.com/api/reminders', nameObject)
     .then(response => {
       this.setState({
         reminders: this.state.reminders.concat(response.data),
@@ -57,7 +57,7 @@ class Reminder extends React.Component {
 
    deleteReminder = (id) => {
     return() => {
-    const url = `http://localhost:3001/api/reminders/${id}`
+    const url = `https://obscure-citadel-05812.herokuapp.com/api/reminders/${id}`
 
     window.confirm("Do you really want to remove it") ?
      axios
