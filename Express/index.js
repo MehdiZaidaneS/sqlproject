@@ -1,14 +1,23 @@
 const express = require('express')
+const Reminder = require('./models/reminder')
 const app = express()
 const bodyParser = require('body-parser')
-
 app.use(express.static('build'))
 app.use(bodyParser.json())
-
 const cors = require('cors')
-
 app.use(cors())
 
+
+
+const formatReminder = (reminder) => {
+  const formattedNote = { name: reminder.name,
+    timestamp: reminder.timestamp,
+    id: reminder._id }
+  delete formattedNote._id
+  delete formattedNote.__v
+
+  return formattedNote
+}
 
 
 let reminders = [
@@ -34,39 +43,44 @@ let reminders = [
       }
     ]
   
-  
-    app.get('/', (req, res) => {
-      res.send('<h1>Hello World!</h1>')
-      
-    })
     
-    app.get('/api/reminders', (req, res) => {
-      res.json(reminders)
+  app.get('/api/reminders', (req, res) => {
+        Reminder
+          .find({})
+          .then(reminders => {
+            res.json(reminders.map(formatReminder))
+          })
     })
     
     app.get('/api/reminders/:id', (request, response) => {
-      const id = Number(request.params.id)
-      const reminder = reminders.find(reminder => reminder.id === id )
-      if ( reminder ) {
-        response.json(reminder)
-      } else {
-        response.status(404).end()
-      }
+          Reminder
+            .findById(request.params.id)
+            .then(reminder => {
+              if (reminder){
+                response.json(formatReminder(reminder))
+              }else {
+                response.status(404).end()
+              }     
+            })
+            .catch(error => {
+              console.log(error)
+              response.status(404).send({error: "malformatted id"})
+            })
     })
 
     app.delete('/api/reminders/:id', (request, response) => {
-      const id = Number(request.params.id)
-      reminders = reminders.filter(reminder => reminder.id !== id)
-    
-      response.status(204).end()
+      Reminder
+        .findByIdAndRemove(request.params.id)
+        .then(result => {
+          response.status(204).end()
+        })
+        .catch(error => {
+          response.status(400).send({ error: 'malformatted id' })
+        })
     })
     
 
-    
-    const generateId = () => {
-      const maxId = reminders.length > 0 ? Math.random() * ((reminders.length+1) - reminders.length) + reminders.length : 1
-      return Math.round(maxId * 1000000)
-    }
+  
     
     app.post('/api/reminders', (request, response) => {
       const body = request.body
@@ -83,15 +97,18 @@ let reminders = [
         }
       })
     
-      const reminder = {
+      const reminder = new Reminder({
         name: body.name,
-        timestamp: body.timestamp,
-        id: generateId()
-      }
-    
-      reminders = reminders.concat(reminder)
+        timestamp: body.timestamp
+      })
       
-      response.json(reminder)
+    
+      reminder
+         .save()
+         .then(formatReminder)
+         .then(savedAndFormattedReminder => {
+           response.json(savedAndFormattedReminder)
+         })
     })
     
 
